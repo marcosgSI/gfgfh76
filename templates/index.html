@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat SocketIO</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2>Chat SocketIO</h2>
+                <hr>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-4">
+                <h4>Usuários conectados</h4>
+                <ul id="users" class="list-group"></ul>
+            </div>
+            <div class="col-sm-8">
+                <h4>Chat</h4>
+                <ul id="messages" class="list-group"></ul>
+                <form>
+                    <div class="form-group">
+                        <label for="username">Nome de usuário:</label>
+                        <input type="text" class="form-control" id="username" placeholder="Digite seu nome de usuário">
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Mensagem:</label>
+                        <input type="text" class="form-control" id="message" placeholder="Digite a mensagem">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Enviar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <script>
+        $(function () {
+            // Conectar ao servidor SocketIO
+            var socket = io.connect('http://' + document.domain + ':' + location.port);
+            // Enviar uma mensagem ao servidor ao clicar no botão "Enviar"
+            $('form').submit(function (event) {
+                event.preventDefault();
+                var username = $('#username').val();
+                var message = $('#message').val();
+                socket.emit('message', {username: username, message: message});
+                $('#message').val('');
+            });
+            // Atualizar a lista de usuários conectados
+            socket.on('update_users', function (data) {
+                $('#users').empty();
+                $.each(data, function (index, value) {
+                    $('#users').append($('<li>').text(value).addClass('list-group-item'));
+                });
+            });
+            // Atualizar a lista de mensagens
+            socket.on('messages', function (data) {
+                $('#messages').empty();
+                $.each(data, function (index, value) {
+                    $('#messages').append($('<li>').text(value.username + ': ' + value.message).addClass('list-group-item'));
+                });
+            });
+            // Adicionar uma nova mensagem à lista de mensagens
+            socket.on('message', function (data) {
+                $('#messages').append($('<li>').text(data.username + ': ' + data.message).addClass('list-group-item'));
+            });
+        });
+    </script>
+</body>
+</html>
